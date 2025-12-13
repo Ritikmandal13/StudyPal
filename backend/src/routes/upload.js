@@ -1,8 +1,10 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
+const FormData = require('form-data');
 const { validatePDF } = require('../middleware/fileValidator');
 const { rateLimiter } = require('../middleware/rateLimiter');
 const storage = require('../utils/storage');
@@ -70,14 +72,20 @@ router.post('/upload', rateLimiter, upload.single('pdf'), validatePDF, async (re
       // Update job status
       await storage.updateJob(jobId, { status: 'parsing', progress: 20, step: 'Sending to worker' });
 
-      // Send async request to worker
+      // Send async request to worker with actual file contents (multipart upload)
       const localPath = path.join(__dirname, '../../data/uploads', `${jobId}.pdf`);
+      const fileStream = fs.createReadStream(localPath);
 
-      axios.post(`${workerUrl}/parse`, {
-        jobId,
-        filePath: localPath,
-        callbackUrl: `${process.env.CALLBACK_URL || 'http://localhost:3001/api/callback'}`,
-        callbackSecret: process.env.CALLBACK_SECRET
+      const form = new FormData();
+      form.append('jobId', jobId);
+      form.append('pdf', fileStream);
+      form.append('callbackUrl', `${process.env.CALLBACK_URL || 'http://localhost:3001/api/callback'}`);
+      form.append('callbackSecret', process.env.CALLBACK_SECRET);
+
+      axios.post(`${workerUrl}/parse`, form, {
+        headers: form.getHeaders(),
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity
       }).catch(err => {
         console.error('Worker request failed:', err.message);
         storage.updateJob(jobId, { 
