@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 
 // Import routes
 const uploadRoutes = require('./routes/upload');
@@ -17,6 +18,15 @@ const { errorHandler } = require('./utils/errorHandler');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Ensure critical data directories exist (especially uploads for multer)
+const dataDir = path.join(__dirname, '../data');
+const uploadsDir = path.join(dataDir, 'uploads');
+try {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+} catch (e) {
+  console.error('Failed to create uploads directory:', e.message);
+}
 
 // CORS configuration
 app.use(cors({
