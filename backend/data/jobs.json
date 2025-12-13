@@ -1,0 +1,40 @@
+{
+  "jobs": {
+    "bee9c359-8102-47e2-8871-58518dd91d9f": {
+      "id": "bee9c359-8102-47e2-8871-58518dd91d9f",
+      "status": "summarizing",
+      "progress": 60,
+      "step": "Generating study materials",
+      "filename": "unit 1.pdf",
+      "fileSize": 3023770,
+      "createdAt": "2025-12-13T14:08:30.492Z",
+      "updatedAt": "2025-12-13T14:08:37.190Z",
+      "metadata": {
+        "title": "Microsoft Word - LECTURE_NOTES_ON_OPERATING_SYSTEMS_B_TEC",
+        "author": "LAPTOP HOUSE",
+        "pages": 26,
+        "wordCount": 5643,
+        "creationDate": "D:20230410161644+05'30'"
+      },
+      "chunkCount": 17
+    },
+    "a640051b-06d1-4c89-8e62-8277e79587c6": {
+      "id": "a640051b-06d1-4c89-8e62-8277e79587c6",
+      "status": "completed",
+      "progress": 100,
+      "step": "Study materials ready!",
+      "filename": "unit 1.pdf",
+      "fileSize": 3023770,
+      "createdAt": "2025-12-13T14:18:12.218Z",
+      "updatedAt": "2025-12-13T14:18:18.733Z",
+      "metadata": {
+        "title": "Microsoft Word - LECTURE_NOTES_ON_OPERATING_SYSTEMS_B_TEC",
+        "author": "LAPTOP HOUSE",
+        "pages": 26,
+        "wordCount": 5643,
+        "creationDate": "D:20230410161644+05'30'"
+      },
+      "chunkCount": 17,
+      "completedAt": "2025-12-13T14:18:21.241Z"
+    }
+  }

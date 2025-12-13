@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: studypal-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - WORKER_URL=http://worker:5000
+      - CALLBACK_SECRET=${CALLBACK_SECRET:-dev-secret-key}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-1.0-pro}
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - backend-data:/app/data
+    depends_on:
+      - worker
+    networks:
+      - studypal-network
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    container_name: studypal-worker
+    ports:
+      - "5000:5000"
+    environment:
+      - CALLBACK_URL=http://backend:3001/api/callback
+      - CALLBACK_SECRET=${CALLBACK_SECRET:-dev-secret-key}
+    volumes:
+      - ./worker:/app
+      - worker-uploads:/app/uploads
+    networks:
+      - studypal-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: studypal-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:3001}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - studypal-network
+    restart: unless-stopped
+
+volumes:
+  backend-data:
+  worker-uploads:
+
+networks:
+  studypal-network:
+    driver: bridge

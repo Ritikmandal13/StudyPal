@@ -1,0 +1,46 @@
+﻿# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.pnp
+.pnp.js
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+
+# Data & Uploads
+backend/data/uploads/
+backend/data/chunks/
+backend/data/results/
+worker/uploads/
+*.pdf
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Testing
+coverage/
+.pytest_cache/
+.nyc_output/
+
+# Docker
+*.pid
+
+# Binaries
+*.exe
