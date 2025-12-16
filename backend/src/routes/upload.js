@@ -68,32 +68,55 @@ router.post('/upload', rateLimiter, upload.single('pdf'), validatePDF, async (re
     // Send to worker for processing
     const workerUrl = process.env.WORKER_URL || 'http://localhost:5000';
     
+    // Helper function to send to worker with retry
+    const sendToWorker = async (retryCount = 0) => {
+      const maxRetries = 2;
+      const localPath = path.join(__dirname, '../../data/uploads', `${jobId}.pdf`);
+      
+      try {
+        const fileStream = fs.createReadStream(localPath);
+        const form = new FormData();
+        form.append('jobId', jobId);
+        form.append('pdf', fileStream);
+        form.append('callbackUrl', `${process.env.CALLBACK_URL || 'http://localhost:3001/api/callback'}`);
+        form.append('callbackSecret', process.env.CALLBACK_SECRET);
+
+        console.log(`[Upload] Sending to worker (attempt ${retryCount + 1}/${maxRetries + 1})`);
+        
+        await axios.post(`${workerUrl}/parse`, form, {
+          headers: form.getHeaders(),
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity,
+          timeout: 120000 // 2 minute timeout for cold starts
+        });
+        
+        console.log(`[Upload] Worker accepted job ${jobId}`);
+      } catch (err) {
+        console.error(`[Upload] Worker request failed (attempt ${retryCount + 1}):`, err.message);
+        
+        if (retryCount < maxRetries) {
+          // Wait before retry (longer wait for cold start)
+          const waitTime = (retryCount + 1) * 5000; // 5s, 10s
+          console.log(`[Upload] Retrying in ${waitTime/1000}s...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          return sendToWorker(retryCount + 1);
+        }
+        
+        // All retries failed
+        storage.updateJob(jobId, { 
+          status: 'error', 
+          error: 'WORKER_UNAVAILABLE',
+          step: 'Worker communication failed after retries'
+        });
+      }
+    };
+
     try {
       // Update job status
       await storage.updateJob(jobId, { status: 'parsing', progress: 20, step: 'Sending to worker' });
 
-      // Send async request to worker with actual file contents (multipart upload)
-      const localPath = path.join(__dirname, '../../data/uploads', `${jobId}.pdf`);
-      const fileStream = fs.createReadStream(localPath);
-
-      const form = new FormData();
-      form.append('jobId', jobId);
-      form.append('pdf', fileStream);
-      form.append('callbackUrl', `${process.env.CALLBACK_URL || 'http://localhost:3001/api/callback'}`);
-      form.append('callbackSecret', process.env.CALLBACK_SECRET);
-
-      axios.post(`${workerUrl}/parse`, form, {
-        headers: form.getHeaders(),
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity
-      }).catch(err => {
-        console.error('Worker request failed:', err.message);
-        storage.updateJob(jobId, { 
-          status: 'error', 
-          error: 'WORKER_UNAVAILABLE',
-          step: 'Worker communication failed'
-        });
-      });
+      // Send async (don't await - let it run in background)
+      sendToWorker();
 
     } catch (workerError) {
       console.error('Failed to send to worker:', workerError);
