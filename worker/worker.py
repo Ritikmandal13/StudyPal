@@ -83,20 +83,25 @@ def parse_pdf():
                 return jsonify({'error': 'PDF file not found'}), 404
         
         # Parse PDF
+        print(f"[Worker] Starting PDF parsing for job {job_id}")
         parser = PDFParser()
         result = parser.parse(pdf_path)
+        print(f"[Worker] PDF parsing complete, result keys: {list(result.keys())}")
         
         if result.get('error'):
+            print(f"[Worker] PDF parsing error: {result['error']}")
             send_error_callback(job_id, callback_url, callback_secret, result['error'])
             return jsonify({'error': result['error']}), 422
         
         # Chunk text with headings and page count for better titles/ranges
+        print(f"[Worker] Starting text chunking, text length: {len(result.get('text', ''))}")
         chunker = TextChunker(target_words=600)
         chunks = chunker.chunk(
             result['text'],
             result.get('headings', []),
             result.get('metadata', {}).get('pages')
         )
+        print(f"[Worker] Created {len(chunks)} chunks")
         
         # Prepare response
         response_data = {
@@ -108,7 +113,9 @@ def parse_pdf():
         }
         
         # Send to callback
+        print(f"[Worker] Sending callback to {callback_url}")
         send_callback(callback_url, response_data)
+        print(f"[Worker] Callback sent successfully")
         
         return jsonify({
             'success': True,
@@ -117,20 +124,28 @@ def parse_pdf():
         })
         
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
         print(f"Error processing PDF: {e}")
+        print(f"Traceback: {error_trace}")
         if job_id:
             send_error_callback(job_id, callback_url, callback_secret, str(e))
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e), 'traceback': error_trace}), 500
 
 
 def send_callback(url, data):
     """Send parsed data to backend callback"""
     try:
-        response = requests.post(url, json=data, timeout=30)
+        print(f"[Callback] Sending POST to {url}")
+        print(f"[Callback] Payload size: {len(str(data))} chars, chunks: {len(data.get('chunks', []))}")
+        response = requests.post(url, json=data, timeout=60)  # Increased timeout for large payloads
+        print(f"[Callback] Response status: {response.status_code}")
         response.raise_for_status()
-        print(f"Callback sent successfully for job {data.get('jobId')}")
+        print(f"[Callback] Callback sent successfully for job {data.get('jobId')}")
     except Exception as e:
-        print(f"Callback failed: {e}")
+        import traceback
+        print(f"[Callback] Callback failed: {e}")
+        print(f"[Callback] Traceback: {traceback.format_exc()}")
         # Retry logic could be added here
 
 
