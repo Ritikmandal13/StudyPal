@@ -66,9 +66,12 @@ def parse_pdf():
             job_id = request.form.get('jobId')
             pdf_file = request.files['pdf']
             pdf_path = os.path.join(UPLOAD_DIR, f"{job_id}.pdf")
+            print(f"[Worker] Received PDF file, saving to {pdf_path}", flush=True)
             pdf_file.save(pdf_path)
+            print(f"[Worker] PDF saved, file exists: {os.path.exists(pdf_path)}", flush=True)
             callback_url = request.form.get('callbackUrl', CALLBACK_URL)
             callback_secret = request.form.get('callbackSecret', CALLBACK_SECRET)
+            print(f"[Worker] Callback URL: {callback_url}", flush=True)
         
         if not job_id:
             return jsonify({'error': 'jobId required'}), 400
@@ -83,10 +86,13 @@ def parse_pdf():
                 return jsonify({'error': 'PDF file not found'}), 404
         
         # Parse PDF
-        print(f"[Worker] Starting PDF parsing for job {job_id}")
+        print(f"[Worker] Starting PDF parsing for job {job_id}", flush=True)
+        import sys
+        sys.stdout.flush()
         parser = PDFParser()
         result = parser.parse(pdf_path)
-        print(f"[Worker] PDF parsing complete, result keys: {list(result.keys())}")
+        print(f"[Worker] PDF parsing complete, result keys: {list(result.keys())}", flush=True)
+        sys.stdout.flush()
         
         if result.get('error'):
             print(f"[Worker] PDF parsing error: {result['error']}")
@@ -125,9 +131,12 @@ def parse_pdf():
         
     except Exception as e:
         import traceback
+        import sys
         error_trace = traceback.format_exc()
-        print(f"Error processing PDF: {e}")
-        print(f"Traceback: {error_trace}")
+        print(f"[Worker] ERROR processing PDF: {e}", flush=True)
+        print(f"[Worker] Traceback: {error_trace}", flush=True)
+        sys.stdout.flush()
+        sys.stderr.flush()
         if job_id:
             send_error_callback(job_id, callback_url, callback_secret, str(e))
         return jsonify({'error': str(e), 'traceback': error_trace}), 500
