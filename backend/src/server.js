@@ -29,8 +29,32 @@ try {
 }
 
 // CORS configuration
+// Support multiple origins (Vercel + localhost for dev)
+const allowedOrigins = [
+  'https://study-pal-woad-pi.vercel.app',
+  'http://localhost:5173'
+];
+
+// Add FRONTEND_URL if provided (strip any path)
+if (process.env.FRONTEND_URL) {
+  const frontendUrl = process.env.FRONTEND_URL.replace(/\/.*$/, ''); // Remove path
+  if (!allowedOrigins.includes(frontendUrl)) {
+    allowedOrigins.push(frontendUrl);
+  }
+}
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is allowed
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
