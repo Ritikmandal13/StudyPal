@@ -69,9 +69,14 @@ def parse_pdf():
             print(f"[Worker] Received PDF file, saving to {pdf_path}", flush=True)
             pdf_file.save(pdf_path)
             print(f"[Worker] PDF saved, file exists: {os.path.exists(pdf_path)}", flush=True)
-            callback_url = request.form.get('callbackUrl', CALLBACK_URL)
+            # Prioritize env var over form data (form data might have wrong localhost URL)
+            form_callback_url = request.form.get('callbackUrl')
+            if form_callback_url and 'localhost' not in form_callback_url and '127.0.0.1' not in form_callback_url:
+                callback_url = form_callback_url
+            else:
+                callback_url = CALLBACK_URL  # Use env var if form has localhost
             callback_secret = request.form.get('callbackSecret', CALLBACK_SECRET)
-            print(f"[Worker] Callback URL: {callback_url}", flush=True)
+            print(f"[Worker] Callback URL: {callback_url} (from form: {form_callback_url}, env: {CALLBACK_URL})", flush=True)
         
         if not job_id:
             return jsonify({'error': 'jobId required'}), 400
