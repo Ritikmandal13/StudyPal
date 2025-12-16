@@ -22,49 +22,40 @@ const PORT = process.env.PORT || 3001;
 // Ensure critical data directories exist (especially uploads for multer)
 const dataDir = path.join(__dirname, '../data');
 const uploadsDir = path.join(dataDir, 'uploads');
-const chunksDir = path.join(dataDir, 'chunks');
-const resultsDir = path.join(dataDir, 'results');
+const jobsFile = path.join(dataDir, 'jobs.json');
+const prefsFile = path.join(dataDir, 'preferences.json');
 
 try {
   fs.mkdirSync(uploadsDir, { recursive: true });
-  fs.mkdirSync(chunksDir, { recursive: true });
-  fs.mkdirSync(resultsDir, { recursive: true });
-  
-  // Initialize JSON files if they don't exist or are corrupted
-  const jobsFile = path.join(dataDir, 'jobs.json');
-  const historyFile = path.join(dataDir, 'history.json');
-  const prefsFile = path.join(dataDir, 'preferences.json');
-  
-  // Initialize jobs.json
-  if (!fs.existsSync(jobsFile)) {
-    fs.writeFileSync(jobsFile, JSON.stringify({ jobs: {} }, null, 2));
-  } else {
-    // Validate JSON - if corrupted, reset it
-    try {
-      const content = fs.readFileSync(jobsFile, 'utf-8');
-      if (content.trim()) {
-        JSON.parse(content);
-      } else {
+  // Initialize JSON files with valid structure if they don't exist or are corrupted
+  try {
+    if (!fs.existsSync(jobsFile)) {
+      fs.writeFileSync(jobsFile, JSON.stringify({ jobs: {} }, null, 2));
+    } else {
+      // Validate existing file - if corrupted, reset it
+      try {
+        const content = fs.readFileSync(jobsFile, 'utf-8');
+        if (content.trim()) {
+          JSON.parse(content); // Validate JSON
+        }
+      } catch (parseErr) {
+        console.log('Resetting corrupted jobs.json');
         fs.writeFileSync(jobsFile, JSON.stringify({ jobs: {} }, null, 2));
       }
-    } catch (e) {
-      console.log('Initializing corrupted jobs.json');
-      fs.writeFileSync(jobsFile, JSON.stringify({ jobs: {} }, null, 2));
     }
+  } catch (e) {
+    console.error('Failed to initialize jobs.json:', e.message);
   }
   
-  // Initialize history.json
-  if (!fs.existsSync(historyFile)) {
-    fs.writeFileSync(historyFile, JSON.stringify({ history: [] }, null, 2));
+  try {
+    if (!fs.existsSync(prefsFile)) {
+      fs.writeFileSync(prefsFile, JSON.stringify(null, null, 2));
+    }
+  } catch (e) {
+    console.error('Failed to initialize preferences.json:', e.message);
   }
-  
-  // Initialize preferences.json
-  if (!fs.existsSync(prefsFile)) {
-    fs.writeFileSync(prefsFile, JSON.stringify(null));
-  }
-  
 } catch (e) {
-  console.error('Failed to initialize data directories:', e.message);
+  console.error('Failed to initialize data directory:', e.message);
 }
 
 // CORS configuration
