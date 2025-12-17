@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Sparkles, History, Moon, Sun, LogOut } from 'lucide-react'
+import { Sparkles, History, Moon, Sun } from 'lucide-react'
 
-export default function Navbar({ user, onLogout, darkMode, onToggleDarkMode }) {
+export default function Navbar({ darkMode, onToggleDarkMode }) {
   const location = useLocation()
   
   const isActive = (path) => location.pathname === path
@@ -57,20 +57,6 @@ export default function Navbar({ user, onLogout, darkMode, onToggleDarkMode }) {
                 <Moon className="w-5 h-5 text-slate-600 dark:text-slate-400" />
               )}
             </button>
-
-            {/* User */}
-            <div className="flex items-center gap-3 pl-3 border-l border-slate-200 dark:border-slate-700">
-              <span className="text-sm text-slate-600 dark:text-slate-400 hidden sm:block">
-                {user?.email}
-              </span>
-              <button
-                onClick={onLogout}
-                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                title="Sign out"
-              >
-                <LogOut className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-              </button>
-            </div>
           </div>
         </div>
       </div>
