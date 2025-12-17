@@ -1,19 +1,11 @@
-import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { BookOpen, Sparkles, Brain, FileQuestion } from 'lucide-react'
 
-export default function LoginPage({ onLogin }) {
-  const [email, setEmail] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+export default function LoginPage() {
+  const navigate = useNavigate()
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!email.trim()) return
-
-    setIsLoading(true)
-    // Simulate login delay
-    await new Promise(resolve => setTimeout(resolve, 500))
-    onLogin(email)
-    setIsLoading(false)
+  const handleGetStarted = () => {
+    navigate('/upload')
   }
 
   const features = [
@@ -57,7 +49,7 @@ export default function LoginPage({ onLogin }) {
         </div>
       </div>
 
-      {/* Right side - Login form */}
+      {/* Right side - Call to action (no login) */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           {/* Mobile logo */}
@@ -69,46 +61,18 @@ export default function LoginPage({ onLogin }) {
           </div>
 
           <div className="card p-8">
-            <h2 className="text-2xl font-display font-bold mb-2">Welcome back</h2>
+            <h2 className="text-2xl font-display font-bold mb-2">Welcome to StudyPal</h2>
             <p className="text-slate-500 dark:text-slate-400 mb-8">
-              Enter your email to continue
+              No login needed. Jump straight into generating notes, flashcards, and quizzes from your PDFs.
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium mb-2">Email address</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="input"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading || !email.trim()}
-                className="btn btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Signing in...
-                  </span>
-                ) : (
-                  'Continue'
-                )}
-              </button>
-            </form>
-
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-6 text-center">
-              This is a demo app. No password required.
-            </p>
+            <button
+              type="button"
+              onClick={handleGetStarted}
+              className="btn btn-primary w-full"
+            >
+              Get started
+            </button>
           </div>
 
           <p className="text-sm text-slate-400 mt-8 text-center">

@@ -35,6 +35,10 @@ function App() {
         <Routes>
           <Route 
             path="/" 
+            element={<LoginPage />} 
+          />
+          <Route 
+            path="/upload" 
             element={<HomePage />} 
           />
           <Route 
